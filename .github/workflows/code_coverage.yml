@@ -2,7 +2,7 @@ on:
   push:
     # Sequence of patterns matched against refs/tags
     branches:
-      - 'master' # Push events to matching v*, i.e. v1.0, v20.15.10
+      - '*'
 
 name: Upload Code Coverage
 
@@ -29,6 +29,8 @@ jobs:
             ${{ runner.os }}-yarn-
       - name: Install Dependencies
         run: yarn install
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v1
       - name: Cypress run
         uses: cypress-io/github-action@v1
         with:
