@@ -11,6 +11,7 @@ jobs:
     name: Integration test
     if: '!github.event.deleted'
     runs-on: ubuntu-16.04
+    container: cypress/browsers:node12.13.0-chrome78-ff70
     steps:
       - uses: actions/checkout@master
       - name: Setup Node
