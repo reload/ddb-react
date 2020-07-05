@@ -175,11 +175,21 @@ function RelatedMaterialsEntry({
   maxTries
 }) {
   const coverClient = new CoverService({ baseUrl: coverServiceUrl });
-  const subject = `term.subject any "${subjects}"`;
-  const category = `term.category any "${categories}"`;
-  const source = `term.acSource any "${sources}"`;
-  const excludeTitle = `phrase.title="${rawExcludeTitle}"`;
-  const query = `${subject} and ${category} and ${source} not ${excludeTitle}`;
+
+  // We may be passed empty strings which will lead to an invalid query.
+  // Compile query clauses using only arguments with actual values.
+  const includes = [
+    ...(subjects ? [`term.subject any "${subjects}"`] : []),
+    ...(categories ? [`term.category any "${categories}"`] : []),
+    ...(sources ? [`term.acSource any "${sources}"`] : [])
+  ];
+  const excludes = [
+    ...(rawExcludeTitle ? [`not phrase.title="${rawExcludeTitle}"`] : [])
+  ];
+  // Use join to get spacing between clauses right. Includes must be separated
+  // by "and" while excludes must nut. Excludes should already have "not" prepended.
+  const query = [includes.join(" and "), excludes.join(" ")].join(" ");
+
   const searchUrl = `${replacePlaceholders({
     text: rawSearchUrl,
     placeholders: {
@@ -187,6 +197,7 @@ function RelatedMaterialsEntry({
       sort: encodeURI(sort)
     }
   })}`;
+
   const relatedMaterials = useGetRelatedMaterials({
     query,
     fields: [
