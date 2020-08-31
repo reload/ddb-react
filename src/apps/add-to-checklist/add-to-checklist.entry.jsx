@@ -1,9 +1,60 @@
-import React, { useState } from "react";
+import React from "react";
+import {
+  createSlice,
+  createAsyncThunk,
+  configureStore,
+  combineReducers
+} from "@reduxjs/toolkit";
+import { useSelector, useDispatch } from "react-redux";
 import PropTypes from "prop-types";
 import urlPropType from "url-prop-type";
 
 import AddToChecklist from "./add-to-checklist";
 import MaterialList from "../../core/MaterialList";
+
+const resetStatus = createAsyncThunk("addToChecklist/resetStatus", () => {
+  return new Promise(resolve => {
+    setTimeout(() => resolve(), 4000);
+  });
+});
+
+const addToList = createAsyncThunk(
+  "addToChecklist/addToList",
+  async ({ materialListUrl, materialId }, { dispatch }) => {
+    const client = new MaterialList({ baseUrl: materialListUrl });
+    try {
+      return await client.addListMaterial({ materialId });
+    } catch (err) {
+      dispatch(resetStatus());
+      return err;
+    }
+  }
+);
+
+const addToChecklist = createSlice({
+  name: "addToChecklist",
+  initialState: { status: "ready" },
+  extraReducers: {
+    [addToList.pending]: state => {
+      state.status = "processing";
+    },
+    [addToList.fulfilled]: state => {
+      state.status = "finished";
+    },
+    [addToList.rejected]: state => {
+      state.status = "failed";
+    },
+    [resetStatus.fulfilled]: state => {
+      state.status = "ready";
+    }
+  }
+});
+
+export const store = configureStore({
+  reducer: combineReducers({
+    addToChecklist: addToChecklist.reducer
+  })
+});
 
 function AddToChecklistEntry({
   materialListUrl,
@@ -13,31 +64,15 @@ function AddToChecklistEntry({
   id,
   loginUrl
 }) {
-  const [status, setStatus] = useState("ready");
-
-  function setRestoreStatus() {
-    setStatus("ready");
-  }
-
-  function setListErrorStatus() {
-    setStatus("failed");
-    setTimeout(setRestoreStatus, 4000);
-  }
-
-  function addToList() {
-    setStatus("processing");
-
-    const client = new MaterialList({ baseUrl: materialListUrl });
-    client.addListMaterial({ materialId: id }).catch(setListErrorStatus);
-  }
-
+  const status = useSelector(state => state.addToChecklist.status);
+  const dispatch = useDispatch();
   return (
     <AddToChecklist
       text={text}
       errorText={errorText}
       successText={successText}
       status={status}
-      onClick={addToList}
+      onClick={() => dispatch(addToList({ materialListUrl, materialId: id }))}
       loginUrl={loginUrl}
       materialId={id}
     />

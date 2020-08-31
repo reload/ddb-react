@@ -1,7 +1,9 @@
 import { createElement } from "react";
 import { render } from "react-dom";
-
+import { Provider } from "react-redux";
 import { withErrorBoundary } from "react-error-boundary";
+import { store } from "../apps/add-to-checklist/add-to-checklist.entry";
+
 import ErrorBoundary from "../components/alert/alert";
 import { setToken } from "./token";
 
@@ -22,9 +24,13 @@ function mount(context) {
     const isValidMount = app && !container.innerHTML;
     if (isValidMount) {
       render(
-        createElement(withErrorBoundary(app, ErrorBoundary), {
-          ...container.dataset
-        }),
+        createElement(
+          Provider,
+          { store },
+          createElement(withErrorBoundary(app, ErrorBoundary), {
+            ...container.dataset
+          })
+        ),
         container
       );
     }
