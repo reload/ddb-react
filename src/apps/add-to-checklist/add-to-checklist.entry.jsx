@@ -20,26 +20,23 @@ const resetStatus = createAsyncThunk("addToChecklist/resetStatus", () => {
 
 const addToList = createAsyncThunk(
   "addToChecklist/addToList",
-  async ({ materialListUrl, materialId }, { dispatch }) => {
+  async ({ materialListUrl, materialId }, { dispatch, rejectWithValue }) => {
     const client = new MaterialList({ baseUrl: materialListUrl });
     try {
       return await client.addListMaterial({ materialId });
     } catch (err) {
       dispatch(resetStatus());
-      return err;
+      return rejectWithValue(err);
     }
   }
 );
 
-const addToChecklist = createSlice({
+const addToChecklistSlice = createSlice({
   name: "addToChecklist",
   initialState: { status: "ready" },
   extraReducers: {
     [addToList.pending]: state => {
       state.status = "processing";
-    },
-    [addToList.fulfilled]: state => {
-      state.status = "finished";
     },
     [addToList.rejected]: state => {
       state.status = "failed";
@@ -52,7 +49,7 @@ const addToChecklist = createSlice({
 
 export const store = configureStore({
   reducer: combineReducers({
-    addToChecklist: addToChecklist.reducer
+    addToChecklist: addToChecklistSlice.reducer
   })
 });
 
