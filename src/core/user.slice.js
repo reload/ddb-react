@@ -20,6 +20,11 @@ const userSlice = createSlice({
           state.status = "failed";
         }
       }
+      // If we end up in an weird state where we expect to be authenticated but
+      // do not have a token available then reset to unauthenticated status.
+      else if (state.status === "authenticated" && !action.payload.hasToken) {
+        state.status = "unauthenticated";
+      }
     }
   },
   extraReducers: {
