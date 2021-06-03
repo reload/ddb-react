@@ -1,0 +1,26 @@
+# How to use this file:
+#
+# 1. Ensure that your local X11 server will allow remote clients. See
+# xhost(1). If all else fails, `xhost +` will disable all access
+# control, which can be acceptable if you trust your local network.
+# Mac and Windows users, you're on your own...
+# 2. Run this with `docker-compose -f docker-compose.yml -f docker-compose.cypress.yml up`
+version: "3.7"
+services:
+  cypress:
+    # the Docker image to use from https://github.com/cypress-io/cypress-docker-images
+    image: "cypress/included:3.8.3"
+    depends_on:
+      - node
+    environment:
+      # Display to connect to.
+      - DISPLAY
+      # Where the tested site is.
+      - CYPRESS_baseUrl=http://node:57021
+    working_dir: /e2e
+    volumes:
+      # Mount in everything.
+      - ./:/e2e
+      # X11 socket, used to connect to your X11 display.
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    entrypoint: yarn run test
